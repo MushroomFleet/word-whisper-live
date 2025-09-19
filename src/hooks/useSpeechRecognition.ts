@@ -70,17 +70,21 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           // Capitalize first letter of the sentence
           const capitalizedTranscript = transcriptPart.charAt(0).toUpperCase() + transcriptPart.slice(1);
           
-          if (timeSinceLastSpeech > 3000 && transcript.length > 0) {
-            // Add paragraph break with period and space
-            setTranscript(prev => prev + '.\n\n' + capitalizedTranscript);
-          } else {
-            // Add to current paragraph with period and space
-            if (transcript.length > 0) {
-              setTranscript(prev => prev + '. ' + capitalizedTranscript);
+          setTranscript(prev => {
+            if (prev.length === 0) {
+              // First sentence - just add the capitalized text with period
+              return capitalizedTranscript + '.';
             } else {
-              setTranscript(prev => prev + capitalizedTranscript);
+              // Subsequent sentences
+              if (timeSinceLastSpeech > 3000) {
+                // Long pause - add paragraph break
+                return prev + '\n\n' + capitalizedTranscript + '.';
+              } else {
+                // Short pause - add space and continue same paragraph
+                return prev + ' ' + capitalizedTranscript + '.';
+              }
             }
-          }
+          });
           
           lastSpeechTime.current = now;
         } else {
