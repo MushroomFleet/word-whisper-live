@@ -67,17 +67,19 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           const now = Date.now();
           const timeSinceLastSpeech = now - lastSpeechTime.current;
           
-          // Capitalize first letter of the sentence and add period
+          // Capitalize first letter of the sentence
           const capitalizedTranscript = transcriptPart.charAt(0).toUpperCase() + transcriptPart.slice(1);
-          const transcriptWithPeriod = capitalizedTranscript + '.';
           
           if (timeSinceLastSpeech > 3000 && transcript.length > 0) {
             // Add paragraph break with period and space
-            setTranscript(prev => prev + '\n\n' + transcriptWithPeriod);
+            setTranscript(prev => prev + '.\n\n' + capitalizedTranscript);
           } else {
-            // Add to current paragraph with period and proper spacing
-            const separator = transcript.length > 0 ? ' ' : '';
-            setTranscript(prev => prev + separator + transcriptWithPeriod);
+            // Add to current paragraph with period and space
+            if (transcript.length > 0) {
+              setTranscript(prev => prev + '. ' + capitalizedTranscript);
+            } else {
+              setTranscript(prev => prev + capitalizedTranscript);
+            }
           }
           
           lastSpeechTime.current = now;
