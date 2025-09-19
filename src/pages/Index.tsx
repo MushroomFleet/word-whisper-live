@@ -95,7 +95,6 @@ const Index = () => {
             transcript={transcript}
             interimTranscript={transcription.interimTranscript}
             isListening={transcription.isListening}
-            placeholder="Click 'Start Listening' to begin transcription..."
             onChange={setTranscript}
           />
           
