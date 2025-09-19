@@ -33,7 +33,8 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
   const [confidence, setConfidence] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
-  const lastSpeechTime = useRef<number>(Date.now());
+  const lastFinalResultTime = useRef<number>(Date.now());
+  const speechEndTime = useRef<number>(Date.now());
 
   // Check if speech recognition is supported
   const isSupported = !!(
@@ -63,9 +64,9 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           finalTranscript += transcriptPart;
           setConfidence(result[0].confidence);
           
-          // Check for paragraph breaks (3+ second pause)
+          // Check for paragraph breaks based on time since last final result
           const now = Date.now();
-          const timeSinceLastSpeech = now - lastSpeechTime.current;
+          const timeSinceLastFinal = now - lastFinalResultTime.current;
           
           // Capitalize first letter of the sentence
           const capitalizedTranscript = transcriptPart.charAt(0).toUpperCase() + transcriptPart.slice(1);
@@ -73,22 +74,26 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           setTranscript(prev => {
             if (prev.length === 0) {
               // First sentence - just add the capitalized text with period
+              lastFinalResultTime.current = now;
               return capitalizedTranscript + '.';
             } else {
-              // Subsequent sentences
-              if (timeSinceLastSpeech > 3000) {
+              // Subsequent sentences - check timing for paragraph breaks
+              if (timeSinceLastFinal > 3000) {
                 // Long pause - add paragraph break
+                lastFinalResultTime.current = now;
                 return prev + '\n\n' + capitalizedTranscript + '.';
               } else {
                 // Short pause - add space and continue same paragraph
+                lastFinalResultTime.current = now;
                 return prev + ' ' + capitalizedTranscript + '.';
               }
             }
           });
           
-          lastSpeechTime.current = now;
         } else {
           interim += transcriptPart;
+          // Update speech end time while interim results are coming in
+          speechEndTime.current = Date.now();
         }
       }
 
@@ -113,7 +118,8 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     recognition.onstart = () => {
       setError(null);
       setIsListening(true);
-      lastSpeechTime.current = Date.now();
+      lastFinalResultTime.current = Date.now();
+      speechEndTime.current = Date.now();
     };
 
     return recognition;
