@@ -57,22 +57,26 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        const transcriptPart = result[0].transcript;
+        const transcriptPart = result[0].transcript.trim();
 
         if (result.isFinal) {
           finalTranscript += transcriptPart;
           setConfidence(result[0].confidence);
           
-          // Check for paragraph breaks (4+ second pause)
+          // Check for paragraph breaks (3+ second pause)
           const now = Date.now();
           const timeSinceLastSpeech = now - lastSpeechTime.current;
           
-          if (timeSinceLastSpeech > 4000 && transcript.length > 0) {
-            // Add paragraph break
-            setTranscript(prev => prev + '\n\n' + transcriptPart);
+          // Add period to the end of speech segment
+          const transcriptWithPeriod = transcriptPart + '.';
+          
+          if (timeSinceLastSpeech > 3000 && transcript.length > 0) {
+            // Add paragraph break with period
+            setTranscript(prev => prev + '\n\n' + transcriptWithPeriod);
           } else {
-            // Add to current paragraph
-            setTranscript(prev => prev + ' ' + transcriptPart);
+            // Add to current paragraph with period
+            const separator = transcript.length > 0 ? ' ' : '';
+            setTranscript(prev => prev + separator + transcriptWithPeriod);
           }
           
           lastSpeechTime.current = now;
