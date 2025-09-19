@@ -14,7 +14,7 @@ export const TranscriptionArea: React.FC<TranscriptionAreaProps> = ({
   transcript,
   interimTranscript,
   isListening,
-  placeholder = "Your transcription will appear here...",
+  placeholder = "",
   onChange,
   className,
 }) => {

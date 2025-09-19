@@ -26,12 +26,6 @@ export const Header: React.FC<HeaderProps> = ({
       )}>
         {projectName}
       </div>
-      <div className={cn(
-        "text-sm text-muted-foreground/70",
-        "theme-retro:text-green-600 theme-retro:font-mono theme-retro:tracking-wider"
-      )}>
-        Zero-data speech-to-text transcription
-      </div>
       
       {/* Subtle theme indicator */}
       <div className={cn(
