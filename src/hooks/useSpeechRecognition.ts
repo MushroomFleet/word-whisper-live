@@ -67,14 +67,15 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           const now = Date.now();
           const timeSinceLastSpeech = now - lastSpeechTime.current;
           
-          // Add period to the end of speech segment
-          const transcriptWithPeriod = transcriptPart + '.';
+          // Capitalize first letter of the sentence and add period
+          const capitalizedTranscript = transcriptPart.charAt(0).toUpperCase() + transcriptPart.slice(1);
+          const transcriptWithPeriod = capitalizedTranscript + '.';
           
           if (timeSinceLastSpeech > 3000 && transcript.length > 0) {
-            // Add paragraph break with period
+            // Add paragraph break with period and space
             setTranscript(prev => prev + '\n\n' + transcriptWithPeriod);
           } else {
-            // Add to current paragraph with period
+            // Add to current paragraph with period and proper spacing
             const separator = transcript.length > 0 ? ' ' : '';
             setTranscript(prev => prev + separator + transcriptWithPeriod);
           }
