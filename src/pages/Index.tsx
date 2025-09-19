@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TranscriptionArea } from '@/components/TranscriptionArea';
 import { ControlPanel } from '@/components/ControlPanel';
 import { SettingsModal } from '@/components/SettingsModal';
 import { Header } from '@/components/Header';
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { useTranscription } from '@/hooks/useTranscription';
 import { useTheme } from '@/hooks/useTheme';
 import { useLocalSettings } from '@/hooks/useLocalSettings';
 import { exportTranscript } from '@/utils/fileExport';
@@ -18,30 +18,15 @@ const Index = () => {
   const { settings, updateSettings } = useLocalSettings();
   const { toast } = useToast();
   
-  const {
-    isListening,
-    transcript: speechTranscript,
-    interimTranscript,
-    error,
-    isSupported,
-    startListening,
-    stopListening,
-    clearTranscript,
-  } = useSpeechRecognition({
-    sentencePause: settings.sentencePause,
-    paragraphPause: settings.paragraphPause,
-    sleepMode: settings.sleepMode,
-  });
+  const transcription = useTranscription(settings);
 
-  // Update transcript when speech recognition provides new text
-  React.useEffect(() => {
-    if (speechTranscript) {
-      setTranscript(speechTranscript);
-    }
-  }, [speechTranscript]);
+  // Update transcript when transcription changes
+  useEffect(() => {
+    setTranscript(transcription.transcript);
+  }, [transcription.transcript]);
 
   // Update theme when settings change
-  React.useEffect(() => {
+  useEffect(() => {
     if (settings.theme !== theme) {
       setTheme(settings.theme);
     }
@@ -76,7 +61,7 @@ const Index = () => {
 
   const handleClearTranscript = () => {
     setTranscript('');
-    clearTranscript();
+    transcription.clearTranscript();
   };
 
   const handleUpdateSettings = (newSettings: Partial<typeof settings>) => {
@@ -108,28 +93,28 @@ const Index = () => {
           {/* Main Transcription Area */}
           <TranscriptionArea
             transcript={transcript}
-            interimTranscript={interimTranscript}
-            isListening={isListening}
+            interimTranscript={transcription.interimTranscript}
+            isListening={transcription.isListening}
+            placeholder="Click 'Start Listening' to begin transcription..."
             onChange={setTranscript}
-            className="w-full"
           />
           
           {/* Control Panel */}
           <div className="relative">
             <ControlPanel
-              isListening={isListening}
-              isSupported={isSupported}
-              hasContent={transcript.trim().length > 0}
-              error={error}
-              onStartListening={startListening}
-              onStopListening={stopListening}
+              isListening={transcription.isListening}
+              isSupported={transcription.isSupported}
+              hasContent={transcript.length > 0}
+              error={transcription.error}
+              onStartListening={transcription.startListening}
+              onStopListening={transcription.stopListening}
               onSave={handleSave}
               onOpenSettings={() => setIsSettingsOpen(true)}
             />
           </div>
           
           {/* Additional Actions */}
-          {transcript.trim().length > 0 && !isListening && (
+          {transcript.trim().length > 0 && !transcription.isListening && (
             <div className="flex justify-center">
               <button
                 onClick={handleClearTranscript}

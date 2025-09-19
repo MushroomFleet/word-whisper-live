@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Theme } from './useTheme';
 
+export type TranscriptionEngine = 'browser' | 'whisper-local' | 'whisper-server';
+
 export interface AppSettings {
   projectName: string;
   theme: Theme;
@@ -8,6 +10,9 @@ export interface AppSettings {
   sentencePause: number; // seconds
   paragraphPause: number; // seconds
   sleepMode: number; // seconds
+  transcriptionEngine: TranscriptionEngine;
+  whisperServerUrl?: string;
+  whisperModel?: string;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -16,6 +21,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   sentencePause: 1,
   paragraphPause: 3,
   sleepMode: 9,
+  transcriptionEngine: 'browser',
+  whisperServerUrl: 'http://localhost:8000',
+  whisperModel: 'whisper-1',
 };
 
 export const useLocalSettings = () => {

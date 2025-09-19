@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
-import { Theme } from '@/hooks/useTheme';
-import { AppSettings } from '@/hooks/useLocalSettings';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Palette, Timer, Volume2, Pause, Moon, Mic, Server, Globe } from "lucide-react";
+import { AppSettings, TranscriptionEngine } from "@/hooks/useLocalSettings";
+import { Theme } from "@/hooks/useTheme";
+import { useState } from "react";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,97 +37,86 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
   onUpdateSettings,
 }) => {
-  const [localProjectName, setLocalProjectName] = useState(settings.projectName);
-  const [localSentencePause, setLocalSentencePause] = useState(settings.sentencePause);
-  const [localParagraphPause, setLocalParagraphPause] = useState(settings.paragraphPause);
-  const [localSleepMode, setLocalSleepMode] = useState(settings.sleepMode);
-
-  if (!isOpen) return null;
+  const [projectName, setProjectName] = useState(settings.projectName);
+  const [selectedTheme, setSelectedTheme] = useState<Theme>(settings.theme);
+  const [sentencePause, setSentencePause] = useState([settings.sentencePause]);
+  const [paragraphPause, setParagraphPause] = useState([settings.paragraphPause]);
+  const [sleepMode, setSleepMode] = useState([settings.sleepMode]);
+  const [transcriptionEngine, setTranscriptionEngine] = useState<TranscriptionEngine>(settings.transcriptionEngine);
+  const [whisperServerUrl, setWhisperServerUrl] = useState(settings.whisperServerUrl || '');
+  const [whisperModel, setWhisperModel] = useState(settings.whisperModel || '');
 
   const handleSave = () => {
     onUpdateSettings({
-      projectName: localProjectName.trim() || 'Untitled',
-      sentencePause: localSentencePause,
-      paragraphPause: localParagraphPause,
-      sleepMode: localSleepMode,
+      projectName,
+      theme: selectedTheme,
+      sentencePause: sentencePause[0],
+      paragraphPause: paragraphPause[0],
+      sleepMode: sleepMode[0],
+      transcriptionEngine,
+      whisperServerUrl: whisperServerUrl || undefined,
+      whisperModel: whisperModel || undefined,
     });
     onClose();
   };
 
   const handleThemeChange = (theme: Theme) => {
-    onUpdateSettings({ theme });
+    setSelectedTheme(theme);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className={cn(
-        "relative w-full max-w-md mx-4 rounded-lg shadow-lg",
-        "bg-popover border border-border",
-        "animate-in fade-in-0 zoom-in-95 duration-200"
-      )}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-popover-foreground">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             Settings
-          </h2>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
-          </Button>
-        </div>
+          </DialogTitle>
+          <DialogDescription>
+            Configure your transcription preferences and appearance.
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Project Name */}
-          <div className="space-y-2">
-            <Label htmlFor="project-name" className="text-sm font-medium text-popover-foreground">
-              Project Name
-            </Label>
+        <div className="space-y-6 py-4">
+          {/* Project Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Project Name</Label>
+            </div>
+            
             <Input
-              id="project-name"
-              value={localProjectName}
-              onChange={(e) => setLocalProjectName(e.target.value)}
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
               placeholder="Enter project name"
-              className={cn(
-                "theme-retro:bg-black theme-retro:border-green-500/30",
-                "theme-retro:text-green-400 theme-retro:placeholder:text-green-600"
-              )}
+              className="text-sm"
             />
             <p className="text-xs text-muted-foreground">
               Used for exported file names
             </p>
           </div>
 
+          <Separator />
+
           {/* Timing Settings */}
           <div className="space-y-4">
-            <Label className="text-sm font-medium text-popover-foreground">
-              Speech Timing
-            </Label>
+            <div className="flex items-center gap-2">
+              <Timer className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Speech Timing</Label>
+            </div>
             
             {/* Sentence Pause */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label className="text-xs text-muted-foreground">
+                  <Volume2 className="h-3 w-3 inline mr-1" />
                   Sentence Pause
                 </Label>
-                <span className="text-xs text-muted-foreground">
-                  {localSentencePause}s
+                <span className="text-xs text-muted-foreground font-mono">
+                  {sentencePause[0]}s
                 </span>
               </div>
               <Slider
-                value={[localSentencePause]}
-                onValueChange={(value) => setLocalSentencePause(value[0])}
+                value={sentencePause}
+                onValueChange={setSentencePause}
                 max={5}
                 min={0.5}
                 step={0.5}
@@ -140,15 +131,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label className="text-xs text-muted-foreground">
+                  <Pause className="h-3 w-3 inline mr-1" />
                   Paragraph Pause
                 </Label>
-                <span className="text-xs text-muted-foreground">
-                  {localParagraphPause}s
+                <span className="text-xs text-muted-foreground font-mono">
+                  {paragraphPause[0]}s
                 </span>
               </div>
               <Slider
-                value={[localParagraphPause]}
-                onValueChange={(value) => setLocalParagraphPause(value[0])}
+                value={paragraphPause}
+                onValueChange={setParagraphPause}
                 max={10}
                 min={1}
                 step={0.5}
@@ -163,15 +155,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label className="text-xs text-muted-foreground">
+                  <Moon className="h-3 w-3 inline mr-1" />
                   Sleep Mode
                 </Label>
-                <span className="text-xs text-muted-foreground">
-                  {localSleepMode}s
+                <span className="text-xs text-muted-foreground font-mono">
+                  {sleepMode[0]}s
                 </span>
               </div>
               <Slider
-                value={[localSleepMode]}
-                onValueChange={(value) => setLocalSleepMode(value[0])}
+                value={sleepMode}
+                onValueChange={setSleepMode}
                 max={30}
                 min={5}
                 step={1}
@@ -183,32 +176,113 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Theme Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-popover-foreground">
-              Theme
-            </Label>
+          <Separator />
+          
+          {/* Transcription Engine Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Mic className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Transcription Engine</Label>
+            </div>
+            
+            <Select value={transcriptionEngine} onValueChange={(value: TranscriptionEngine) => setTranscriptionEngine(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="browser">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    <span>Browser Speech API</span>
+                    <Badge variant="secondary" className="ml-2">Free</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="whisper-server">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-4 w-4" />
+                    <span>Local Whisper Server</span>
+                    <Badge variant="outline" className="ml-2">Advanced</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="whisper-local">
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-4 w-4" />
+                    <span>Browser Whisper</span>
+                    <Badge variant="outline" className="ml-2">Beta</Badge>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            {transcriptionEngine === 'whisper-server' && (
+              <div className="space-y-4 pl-6 border-l-2 border-muted">
+                <div className="space-y-2">
+                  <Label htmlFor="whisper-url" className="text-sm">Server URL</Label>
+                  <Input
+                    id="whisper-url"
+                    value={whisperServerUrl}
+                    onChange={(e) => setWhisperServerUrl(e.target.value)}
+                    placeholder="http://localhost:8000"
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    URL of your local Whisper server API
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="whisper-model" className="text-sm">Model</Label>
+                  <Input
+                    id="whisper-model"
+                    value={whisperModel}
+                    onChange={(e) => setWhisperModel(e.target.value)}
+                    placeholder="whisper-1"
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Whisper model to use (e.g., whisper-1, base, small, medium, large)
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {transcriptionEngine === 'whisper-local' && (
+              <div className="pl-6 border-l-2 border-muted">
+                <p className="text-xs text-muted-foreground">
+                  Runs Whisper models directly in your browser using WebAssembly. 
+                  Requires downloading model files (~40-1500MB depending on model size).
+                </p>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+          
+          {/* Theme Settings */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Palette className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-sm font-medium">Theme</Label>
+            </div>
+            
             <div className="space-y-2">
               {THEMES.map((theme) => (
                 <div
                   key={theme.value}
                   onClick={() => handleThemeChange(theme.value)}
-                  className={cn(
-                    "p-3 rounded-md border cursor-pointer transition-all duration-200",
-                    "hover:bg-accent hover:border-accent-foreground/20",
-                    settings.theme === theme.value
+                  className={`p-3 rounded-md border cursor-pointer transition-all duration-200 hover:bg-accent hover:border-accent-foreground/20 ${
+                    selectedTheme === theme.value
                       ? "bg-primary/10 border-primary text-primary"
                       : "bg-card border-border text-card-foreground"
-                  )}
+                  }`}
                 >
                   <div className="flex items-center gap-2">
                     <div
-                      className={cn(
-                        "w-4 h-4 rounded-full border-2",
-                        settings.theme === theme.value
+                      className={`w-4 h-4 rounded-full border-2 ${
+                        selectedTheme === theme.value
                           ? "border-primary bg-primary"
                           : "border-muted-foreground"
-                      )}
+                      }`}
                     />
                     <div>
                       <div className="font-medium">{theme.label}</div>
@@ -223,22 +297,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-border">
-          <Button
-            onClick={onClose}
-            variant="outline"
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            variant="default"
-          >
+          <Button onClick={handleSave}>
             Save Changes
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
