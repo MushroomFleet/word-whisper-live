@@ -49,23 +49,23 @@
   }
 
   .theme-retro {
-    /* Retro Console Theme - Matrix Green */
-    --background: 0 0% 0%; /* Pure black */
+    /* Retro Console Theme - Enhanced CRT Terminal */
+    --background: 0 0% 2%; /* Near black with slight tint */
     --foreground: 123 100% 50%; /* #00ff41 matrix green */
 
-    --card: 0 0% 0%;
+    --card: 0 0% 2%;
     --card-foreground: 123 100% 50%;
 
-    --popover: 120 100% 10%; /* Very dark green */
+    --popover: 120 100% 8%; /* Very dark green */
     --popover-foreground: 123 100% 50%;
 
     --primary: 123 100% 50%; /* #00ff41 */
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 120 100% 15%; /* Dark green */
+    --secondary: 120 100% 12%; /* Dark green */
     --secondary-foreground: 123 100% 50%;
 
-    --muted: 120 100% 15%;
+    --muted: 120 100% 12%;
     --muted-foreground: 123 100% 35%; /* #008f11 darker green */
 
     --accent: 123 100% 50%;
@@ -74,8 +74,8 @@
     --destructive: 0 100% 50%; /* Bright red for contrast */
     --destructive-foreground: 0 0% 0%;
 
-    --border: 120 100% 20%;
-    --input: 120 100% 15%;
+    --border: 120 100% 15%;
+    --input: 120 100% 8%;
     --ring: 123 100% 50%;
 
     /* Recording state - Bright red */
@@ -86,7 +86,11 @@
     --success: 123 100% 60%;
     --success-foreground: 0 0% 0%;
 
-    --radius: 0.25rem; /* More angular for retro feel */
+    --radius: 0rem; /* Sharp corners for terminal feel */
+    
+    /* CRT monitor simulation vars */
+    --crt-flicker: 0.015;
+    --scanline-opacity: 0.04;
   }
 }
 
@@ -102,12 +106,56 @@
 
   /* Retro console font styling */
   .theme-retro {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', 'Source Code Pro', 'Consolas', monospace;
     font-weight: 400;
+    position: relative;
+    overflow: hidden;
   }
 
   .theme-retro * {
     font-family: inherit;
+  }
+
+  /* CRT Monitor Effects */
+  .theme-retro::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      transparent 50%,
+      rgba(0, 255, 65, var(--scanline-opacity)) 50%
+    );
+    background-size: 100% 4px;
+    animation: scanlines 0.033s linear infinite;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Screen flicker effect */
+  .theme-retro::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 255, 65, var(--crt-flicker));
+    animation: flicker 0.15s infinite linear alternate;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* CRT curvature simulation */
+  .theme-retro body {
+    background: radial-gradient(
+      ellipse at center,
+      hsl(var(--background)) 0%,
+      hsl(var(--background)) 70%,
+      rgba(0, 0, 0, 0.8) 100%
+    );
   }
 }
 
@@ -141,9 +189,63 @@
     51%, 100% { opacity: 0; }
   }
 
+  /* CRT Monitor keyframes */
+  @keyframes scanlines {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(4px); }
+  }
+
+  @keyframes flicker {
+    0% { opacity: 1; }
+    100% { opacity: 0.98; }
+  }
+
+  /* Retro terminal text effects */
+  @keyframes textGlow {
+    0%, 100% { 
+      text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+    }
+    50% {
+      text-shadow: 0 0 2px currentColor, 0 0 5px currentColor, 0 0 8px currentColor;
+    }
+  }
+
   /* Matrix-style text glow for retro theme */
   .theme-retro .text-glow {
-    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+    animation: textGlow 2s ease-in-out infinite alternate;
+  }
+
+  /* Terminal cursor enhancement */
+  .theme-retro .typing-cursor::after {
+    content: '█';
+    animation: blink 1s infinite, textGlow 2s ease-in-out infinite alternate;
+    margin-left: 1px;
+    color: hsl(var(--primary));
+  }
+
+  /* Retro button styling */
+  .theme-retro button {
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 2px solid hsl(var(--primary));
+    background: hsl(var(--background));
+    color: hsl(var(--primary));
+    transition: all 0.2s ease;
+  }
+
+  .theme-retro button:hover {
+    background: hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+    text-shadow: 0 0 5px currentColor;
+  }
+
+  /* Terminal prompt styling */
+  .theme-retro .terminal-prompt::before {
+    content: '> ';
+    color: hsl(var(--primary));
+    font-weight: bold;
   }
 
   /* Gradient backgrounds for modern theme */
@@ -153,15 +255,5 @@
 
   .gradient-recording {
     background: linear-gradient(135deg, hsl(var(--recording) / 0.1), hsl(var(--recording) / 0.05));
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }
