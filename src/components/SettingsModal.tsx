@@ -4,6 +4,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { Theme } from '@/hooks/useTheme';
 import { AppSettings } from '@/hooks/useLocalSettings';
@@ -35,12 +36,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateSettings,
 }) => {
   const [localProjectName, setLocalProjectName] = useState(settings.projectName);
+  const [localSentencePause, setLocalSentencePause] = useState(settings.sentencePause);
+  const [localParagraphPause, setLocalParagraphPause] = useState(settings.paragraphPause);
+  const [localSleepMode, setLocalSleepMode] = useState(settings.sleepMode);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     onUpdateSettings({
       projectName: localProjectName.trim() || 'Untitled',
+      sentencePause: localSentencePause,
+      paragraphPause: localParagraphPause,
+      sleepMode: localSleepMode,
     });
     onClose();
   };
@@ -98,6 +105,82 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <p className="text-xs text-muted-foreground">
               Used for exported file names
             </p>
+          </div>
+
+          {/* Timing Settings */}
+          <div className="space-y-4">
+            <Label className="text-sm font-medium text-popover-foreground">
+              Speech Timing
+            </Label>
+            
+            {/* Sentence Pause */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs text-muted-foreground">
+                  Sentence Pause
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {localSentencePause}s
+                </span>
+              </div>
+              <Slider
+                value={[localSentencePause]}
+                onValueChange={(value) => setLocalSentencePause(value[0])}
+                max={5}
+                min={0.5}
+                step={0.5}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Pause duration to end a sentence and add period
+              </p>
+            </div>
+
+            {/* Paragraph Pause */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs text-muted-foreground">
+                  Paragraph Pause
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {localParagraphPause}s
+                </span>
+              </div>
+              <Slider
+                value={[localParagraphPause]}
+                onValueChange={(value) => setLocalParagraphPause(value[0])}
+                max={10}
+                min={1}
+                step={0.5}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Pause duration to start a new paragraph
+              </p>
+            </div>
+
+            {/* Sleep Mode */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs text-muted-foreground">
+                  Sleep Mode
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {localSleepMode}s
+                </span>
+              </div>
+              <Slider
+                value={[localSleepMode]}
+                onValueChange={(value) => setLocalSleepMode(value[0])}
+                max={30}
+                min={5}
+                step={1}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Auto-stop transcription after silence
+              </p>
+            </div>
           </div>
 
           {/* Theme Selection */}

@@ -6,6 +6,12 @@ interface SpeechRecognitionResult {
   isFinal: boolean;
 }
 
+interface SpeechSettings {
+  sentencePause: number; // seconds
+  paragraphPause: number; // seconds
+  sleepMode: number; // seconds
+}
+
 interface UseSpeechRecognitionReturn {
   isListening: boolean;
   transcript: string;
@@ -26,7 +32,13 @@ declare global {
   }
 }
 
-export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
+export const useSpeechRecognition = (settings?: SpeechSettings): UseSpeechRecognitionReturn => {
+  // Default settings
+  const speechSettings = {
+    sentencePause: settings?.sentencePause ?? 1,
+    paragraphPause: settings?.paragraphPause ?? 3,
+    sleepMode: settings?.sleepMode ?? 9,
+  };
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
@@ -35,6 +47,7 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
   const recognitionRef = useRef<any>(null);
   const lastFinalResultTime = useRef<number>(Date.now());
   const speechEndTime = useRef<number>(Date.now());
+  const sleepTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Check if speech recognition is supported
   const isSupported = !!(
@@ -78,12 +91,16 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
               return capitalizedTranscript + '.';
             } else {
               // Subsequent sentences - check timing for paragraph breaks
-              if (timeSinceLastFinal > 3000) {
+              if (timeSinceLastFinal > speechSettings.paragraphPause * 1000) {
                 // Long pause - add paragraph break
                 lastFinalResultTime.current = now;
                 return prev + '\n\n' + capitalizedTranscript + '.';
+              } else if (timeSinceLastFinal > speechSettings.sentencePause * 1000) {
+                // Sentence pause - add space and continue same paragraph
+                lastFinalResultTime.current = now;
+                return prev + ' ' + capitalizedTranscript + '.';
               } else {
-                // Short pause - add space and continue same paragraph
+                // Very short pause - continue same sentence
                 lastFinalResultTime.current = now;
                 return prev + ' ' + capitalizedTranscript + '.';
               }
@@ -94,6 +111,18 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
           interim += transcriptPart;
           // Update speech end time while interim results are coming in
           speechEndTime.current = Date.now();
+          
+          // Reset sleep timer when we get new speech
+          if (sleepTimer.current) {
+            clearTimeout(sleepTimer.current);
+          }
+          
+          // Set new sleep timer
+          sleepTimer.current = setTimeout(() => {
+            if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
+          }, speechSettings.sleepMode * 1000);
         }
       }
 
@@ -113,6 +142,10 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     recognition.onend = () => {
       setIsListening(false);
       setInterimTranscript('');
+      if (sleepTimer.current) {
+        clearTimeout(sleepTimer.current);
+        sleepTimer.current = null;
+      }
     };
 
     recognition.onstart = () => {
@@ -146,6 +179,10 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    if (sleepTimer.current) {
+      clearTimeout(sleepTimer.current);
+      sleepTimer.current = null;
+    }
   }, []);
 
   const clearTranscript = useCallback(() => {
@@ -160,6 +197,9 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+      }
+      if (sleepTimer.current) {
+        clearTimeout(sleepTimer.current);
       }
     };
   }, []);

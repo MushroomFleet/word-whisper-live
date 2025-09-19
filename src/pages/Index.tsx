@@ -27,7 +27,11 @@ const Index = () => {
     startListening,
     stopListening,
     clearTranscript,
-  } = useSpeechRecognition();
+  } = useSpeechRecognition({
+    sentencePause: settings.sentencePause,
+    paragraphPause: settings.paragraphPause,
+    sleepMode: settings.sleepMode,
+  });
 
   // Update transcript when speech recognition provides new text
   React.useEffect(() => {

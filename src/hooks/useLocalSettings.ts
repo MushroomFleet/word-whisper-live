@@ -5,11 +5,17 @@ export interface AppSettings {
   projectName: string;
   theme: Theme;
   microphoneDeviceId?: string;
+  sentencePause: number; // seconds
+  paragraphPause: number; // seconds
+  sleepMode: number; // seconds
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   projectName: 'Untitled',
   theme: 'modern-dark',
+  sentencePause: 1,
+  paragraphPause: 3,
+  sleepMode: 9,
 };
 
 export const useLocalSettings = () => {
