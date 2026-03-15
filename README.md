@@ -10,6 +10,8 @@
 
 A modern, privacy-focused speech-to-text transcription application that runs entirely in your browser or with local Whisper servers. Convert speech to text with customizable timing controls, multiple transcription engines, and export capabilities—all while keeping your data private and secure.
 
+CARELESS LIVE is moving ... we will be right back !
+
 ## ✨ Features
 
 - **🎤 Multiple Transcription Engines**: Browser Speech API, Local Whisper Server, or Browser Whisper (Beta)
