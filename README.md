@@ -358,3 +358,11 @@ The application uses a custom design system built on Tailwind CSS:
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+## Support This Project
+
+If you found this useful, please **star the repo** — it helps others discover it!
+
+[![Star on GitHub](https://img.shields.io/github/stars/MushroomFleet/word-whisper-live?style=social)](https://github.com/MushroomFleet/word-whisper-live)
